@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="relative overflow-hidden bg-gradient-to-br from-violet-700 via-fuchsia-600 to-slate-900 px-4 py-20 sm:px-6 lg:px-8">
+  <div class="mx-auto max-w-7xl rounded-[2rem] bg-white/5 p-8 shadow-soft backdrop-blur sm:p-12 lg:flex lg:items-center lg:justify-between">
+    <div class="max-w-2xl text-white lg:pr-12">
+      <p class="mb-4 inline-flex rounded-full bg-white/10 px-4 py-2 text-sm font-semibold uppercase tracking-[0.3em] text-white/80">Soins connectés</p>
+      <h1 class="mt-6 text-4xl font-bold tracking-tight text-white sm:text-5xl">Votre santé, notre priorité.</h1>
+      <p class="mt-6 max-w-xl text-lg leading-8 text-slate-200">Réservez un médecin en quelques clics, bénéficiez d’un diagnostic IA gratuit et suivez votre parcours santé avec une plateforme sécurisée et pensée pour votre bien-être.</p>
+      <div class="mt-10 flex flex-col gap-4 sm:flex-row">
+        <a href="/medecins" class="inline-flex items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-semibold text-slate-900 shadow-lg transition hover:bg-slate-100">Trouver un médecin</a>
+        <a href="/triage" class="inline-flex items-center justify-center rounded-full border border-white/40 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20">Diagnostic IA gratuit</a>
+      </div>
+    </div>
+    <div class="mt-12 grid gap-4 sm:mt-0 sm:grid-cols-2 lg:w-[480px]">
+      <div class="rounded-[1.75rem] border border-white/10 bg-white/10 p-6 text-white shadow-soft">
+        <p class="text-sm uppercase tracking-[0.26em] text-slate-200">Assistance instantanée</p>
+        <h2 class="mt-3 text-3xl font-semibold">24/7</h2>
+        <p class="mt-2 text-sm text-slate-300">Support médical et orientation en continu.</p>
+      </div>
+      <div class="rounded-[1.75rem] border border-white/10 bg-white/10 p-6 text-white shadow-soft">
+        <p class="text-sm uppercase tracking-[0.26em] text-slate-200">Sécurité</p>
+        <h2 class="mt-3 text-3xl font-semibold">Données chiffrées</h2>
+        <p class="mt-2 text-sm text-slate-300">Confidentialité et conformité RGPD intégrées.</p>
+      </div>
+    </div>
+  </div>
+  <div class="mx-auto mt-12 grid max-w-5xl grid-cols-2 gap-4 rounded-[1.5rem] bg-white/10 p-6 text-center text-slate-100 shadow-soft sm:grid-cols-4">
+    <div>
+      <p class="text-3xl font-semibold">{{ stats.doctors }}</p>
+      <p class="mt-2 text-sm text-slate-200">Médecins inscrits</p>
+    </div>
+    <div>
+      <p class="text-3xl font-semibold">{{ stats.appointments }}</p>
+      <p class="mt-2 text-sm text-slate-200">Rendez-vous enregistrés</p>
+    </div>
+    <div>
+      <p class="text-3xl font-semibold">{{ stats.analyses }}</p>
+      <p class="mt-2 text-sm text-slate-200">Analyses IA réalisées</p>
+    </div>
+    <div>
+      <p class="text-3xl font-semibold">{{ stats.specialites }}</p>
+      <p class="mt-2 text-sm text-slate-200">Spécialités disponibles</p>
+    </div>
+  </div>
+  {% if model_metrics and model_metrics.accuracy is defined %}
+  <div class="mx-auto mt-4 max-w-5xl px-6 text-center text-sm text-slate-200">
+    <p>Modèle IA : précision estimée {{ (model_metrics.accuracy * 100) | round(1) }}%</p>
+  </div>
+  {% endif %}
+</section>
+
+<section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+  <div class="mb-12 text-center">
+    <p class="text-sm font-semibold uppercase tracking-[0.3em] text-violet-600">Services</p>
+    <h2 class="mt-4 text-3xl font-bold text-slate-900 sm:text-4xl">Des services pensés pour chaque étape de votre parcours santé</h2>
+  </div>
+  <div class="grid gap-6 md:grid-cols-3">
+    <article class="rounded-[1.5rem] border border-slate-200 bg-white p-8 shadow-soft">
+      <div class="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-3xl bg-violet-50 text-violet-700">📅</div>
+      <h3 class="text-xl font-semibold text-slate-900">Prise de rendez-vous</h3>
+      <p class="mt-3 text-slate-600">Accédez aux créneaux, comparez les disponibilités et confirmez rapidement.</p>
+    </article>
+    <article class="rounded-[1.5rem] border border-slate-200 bg-white p-8 shadow-soft">
+      <div class="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-3xl bg-fuchsia-50 text-fuchsia-700">🧠</div>
+      <h3 class="text-xl font-semibold text-slate-900">Diagnostic IA</h3>
+      <p class="mt-3 text-slate-600">Un premier diagnostic guidé par IA pour mieux orienter vos symptômes.</p>
+    </article>
+    <article class="rounded-[1.5rem] border border-slate-200 bg-white p-8 shadow-soft">
+      <div class="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-3xl bg-slate-50 text-slate-700">❤️</div>
+      <h3 class="text-xl font-semibold text-slate-900">Suivi médical</h3>
+      <p class="mt-3 text-slate-600">Consultez votre dossier, vos rendez-vous et vos conseils santé centralisés.</p>
+    </article>
+  </div>
+</section>
+
+<section class="bg-slate-50 py-16">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="mb-12 text-center">
+      <p class="text-sm font-semibold uppercase tracking-[0.3em] text-violet-600">Spécialités</p>
+      <h2 class="mt-4 text-3xl font-bold text-slate-900 sm:text-4xl">Trouvez le bon spécialiste en un instant</h2>
+    </div>
+    <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
+      {% for specialty, count in [('Cardiologie', '42'), ('Ophtalmologie', '38'), ('Pédiatrie', '30'), ('Dermatologie', '26'), ('Gynécologie', '22'), ('Neurologie', '18'), ('Psychiatrie', '16'), ('Orthopédie', '20'), ('Endocrinologie', '14'), ('Urologie', '12')] %}
+      <article class="rounded-[1.75rem] border border-slate-200 bg-white p-6 shadow-soft transition hover:-translate-y-1 hover:shadow-lg">
+        <div class="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-3xl bg-violet-50 text-violet-700">💡</div>
+        <h3 class="text-lg font-semibold text-slate-900">{{ specialty }}</h3>
+        <p class="mt-3 text-sm text-slate-500">{{ count }} médecins</p>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+  <div class="mb-12 text-center">
+    <p class="text-sm font-semibold uppercase tracking-[0.3em] text-violet-600">Innovations</p>
+    <h2 class="mt-4 text-3xl font-bold text-slate-900 sm:text-4xl">Actualités médicales et tendances</h2>
+  </div>
+  <div class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white p-6 shadow-soft">
+    <div class="flex snap-x snap-mandatory gap-5 overflow-x-auto pb-4">
+      <article class="min-w-[280px] snap-start rounded-[1.75rem] bg-gradient-to-br from-violet-600 to-fuchsia-500 p-7 text-white shadow-soft">
+        <p class="text-xs uppercase tracking-[0.3em] text-white/80">Nouveau</p>
+        <h3 class="mt-4 text-xl font-semibold">IA d’aide au diagnostic respiratoire</h3>
+        <p class="mt-4 text-sm text-slate-100">Un nouvel outil de triage pour les symptômes respiratoires est désormais disponible.</p>
+        <p class="mt-5 text-xs text-white/80">12 juin 2026</p>
+      </article>
+      <article class="min-w-[280px] snap-start rounded-[1.75rem] bg-slate-900 p-7 text-white shadow-soft">
+        <p class="text-xs uppercase tracking-[0.3em] text-violet-300">Tendance</p>
+        <h3 class="mt-4 text-xl font-semibold">Vigilance santé 24/7</h3>
+        <p class="mt-4 text-sm text-slate-300">Rester suivi même en dehors des consultations est désormais plus simple.</p>
+        <p class="mt-5 text-xs text-slate-400">9 juin 2026</p>
+      </article>
+      <article class="min-w-[280px] snap-start rounded-[1.75rem] bg-violet-100 p-7 text-slate-900 shadow-soft">
+        <p class="text-xs uppercase tracking-[0.3em] text-violet-600">À découvrir</p>
+        <h3 class="mt-4 text-xl font-semibold">Téléconsultations personnalisées</h3>
+        <p class="mt-4 text-sm text-slate-600">Une connexion immédiate avec des spécialistes à distance vous accompagne mieux.</p>
+        <p class="mt-5 text-xs text-slate-500">3 juin 2026</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="bg-slate-50 py-16">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {% for title, description, icon in [
+        ('Disponibilité 24/7', 'Accès permanent à votre dossier et au diagnostic IA.', '⏰'),
+        ('Sécurité', 'Stockage chiffré et conformité RGPD.', '🔒'),
+        ('Expertise', 'Des spécialistes certifiés et évalués.', '🩺'),
+        ('Accessibilité', 'Un parcours fluide sur mobile et desktop.', '📱'),
+        ('Simplicité', 'Réservations et suivi en quelques clics.', '✅'),
+        ('Confiance', 'Avis patients transparents et fiables.', '⭐')
+      ] %}
+      <article class="rounded-[1.5rem] border border-slate-200 bg-white p-6 shadow-soft">
+        <div class="inline-flex h-14 w-14 items-center justify-center rounded-3xl bg-violet-50 text-violet-700">{{ icon }}</div>
+        <h3 class="mt-5 text-lg font-semibold text-slate-900">{{ title }}</h3>
+        <p class="mt-3 text-sm leading-6 text-slate-600">{{ description }}</p>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="bg-gradient-to-r from-violet-700 via-fuchsia-600 to-slate-900 px-4 py-16 text-white sm:px-6 lg:px-8">
+  <div class="mx-auto max-w-7xl rounded-[2rem] border border-white/10 bg-white/5 p-10 shadow-soft backdrop-blur sm:p-14">
+    <div class="grid gap-8 lg:grid-cols-2 lg:items-center">
+      <div>
+        <p class="text-sm font-semibold uppercase tracking-[0.3em] text-violet-200">Prêt à prendre soin de votre santé ?</p>
+        <h2 class="mt-4 text-4xl font-bold tracking-tight sm:text-5xl">Commencez maintenant avec MédiRendez-vous</h2>
+        <p class="mt-6 max-w-xl text-base leading-8 text-slate-100/90">Rejoignez une plateforme moderne qui centralise vos rendez-vous, votre suivi médical et votre diagnostic IA en un seul espace sécurisé.</p>
+      </div>
+      <div class="flex items-center justify-start lg:justify-end">
+        <a href="/medecins" class="inline-flex rounded-full bg-white px-8 py-4 text-sm font-semibold text-slate-900 shadow-lg transition hover:bg-slate-100">Commencer maintenant</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

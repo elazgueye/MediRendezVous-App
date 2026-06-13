@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
+  <div class="rounded-[2rem] border border-slate-200 bg-white p-10 shadow-soft">
+    <div class="mb-8 text-center">
+      <p class="text-sm font-semibold uppercase tracking-[0.3em] text-violet-600">Profil médecin</p>
+      <h1 class="mt-3 text-3xl font-bold text-slate-900">Dr. {{ medecin.prenom }} {{ medecin.nom }}</h1>
+      <p class="mt-4 text-slate-600">Modifiez vos informations professionnelles et vos coordonnées.</p>
+    </div>
+    <form method="POST" class="space-y-6">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="grid gap-6 sm:grid-cols-2">
+        <div>
+          <label class="mb-2 block text-sm font-semibold text-slate-700">Prénom</label>
+          <input type="text" name="prenom" value="{{ medecin.prenom }}" class="w-full rounded-[1.5rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-violet-500 focus:ring-2 focus:ring-violet-100">
+        </div>
+        <div>
+          <label class="mb-2 block text-sm font-semibold text-slate-700">Nom</label>
+          <input type="text" name="nom" value="{{ medecin.nom }}" class="w-full rounded-[1.5rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-violet-500 focus:ring-2 focus:ring-violet-100">
+        </div>
+      </div>
+      <div class="grid gap-6 sm:grid-cols-2">
+        <div>
+          <label class="mb-2 block text-sm font-semibold text-slate-700">Email</label>
+          <input type="email" name="email" value="{{ medecin.email }}" class="w-full rounded-[1.5rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-violet-500 focus:ring-2 focus:ring-violet-100">
+        </div>
+        <div>
+          <label class="mb-2 block text-sm font-semibold text-slate-700">Téléphone</label>
+          <input type="text" name="telephone" value="{{ medecin.telephone }}" class="w-full rounded-[1.5rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-violet-500 focus:ring-2 focus:ring-violet-100">
+        </div>
+      </div>
+      <div class="grid gap-6 sm:grid-cols-2">
+        <div>
+          <label class="mb-2 block text-sm font-semibold text-slate-700">Spécialité</label>
+          <input type="text" name="specialite" value="{{ medecin.specialite_rel.nom if medecin.specialite_rel else medecin.specialite }}" class="w-full rounded-[1.5rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-violet-500 focus:ring-2 focus:ring-violet-100">
+        </div>
+        <div>
+          <label class="mb-2 block text-sm font-semibold text-slate-700">Numéro d’ordre</label>
+          <input type="text" name="numero_ordre" value="{{ medecin.numero_ordre }}" class="w-full rounded-[1.5rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-violet-500 focus:ring-2 focus:ring-violet-100">
+        </div>
+      </div>
+      <div class="grid gap-6 sm:grid-cols-2">
+        <div>
+          <label class="mb-2 block text-sm font-semibold text-slate-700">Expérience</label>
+          <input type="text" name="experience" value="{{ medecin.experience }}" class="w-full rounded-[1.5rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:border-violet-500 focus:ring-2 focus:ring-violet-100" placeholder="Ex : 12 ans en chirurgie">
+        </div>
+        <div></div>
+      </div>
+      <button type="submit" class="inline-flex w-full items-center justify-center rounded-full bg-violet-600 px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-violet-700">Mettre à jour le profil</button>
+    </form>
+  </div>
+</section>
+{% endblock %}
