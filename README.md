@@ -1,73 +1,40 @@
-MédiRendez-vous — instructions pour l'intégration et l'entraînement du modèle IA
+# MédiRendez-vous
 
-Résumé
+MédiRendez-vous est une application web de gestion et de prise de rendez-vous médicaux.
 
-Ce dépôt contient une application Flask simple pour la prise de rendez-vous et un outil de triage IA.
-Le projet peut utiliser un dataset CSV local pour entraîner un classifieur textuel (TF-IDF + LogisticRegression) afin d'orienter les symptômes.
+Elle permet aux patients de rechercher des médecins, consulter leurs disponibilités et prendre rendez-vous. Les médecins peuvent gérer leur agenda, leurs disponibilités et leurs rendez-vous. Un espace administrateur permet également de gérer les utilisateurs, médecins, spécialités et rendez-vous.
 
-Où placer votre CSV
+L'application intègre également un système de **triage médical assisté par IA** permettant d'orienter l'utilisateur à partir des symptômes renseignés.
 
-- Placez votre fichier CSV à la racine du projet dans le dossier `data/`.
-  Exemple : `data/diagnostics.csv`
-- Format accepté :
-  - Format 1 (simple) : colonnes `symptomes` et `orientation` (noms insensibles à la casse).
-    - Chaque ligne : un texte libre de symptômes et l'orientation correspondante.
-  - Format 2 (large tableau binaire) : la première colonne est la "maladie" ou l'étiquette, les colonnes suivantes sont des symptômes (0/1 ou 0.0/1.0).
-    - Le script construit un champ texte `symptomes` en concaténant les noms des symptômes présents pour chaque ligne.
+## Fonctionnalités
 
-Sécurité des données
+- 👤 Gestion des comptes patients et médecins
+- 🔎 Recherche de médecins par nom ou spécialité
+- 📅 Prise et gestion des rendez-vous
+- 🕐 Gestion des disponibilités des médecins
+- 👨‍⚕️ Gestion des agendas
+- 🛠️ Administration des utilisateurs, médecins, spécialités et rendez-vous
+- 🤖 Triage médical assisté par IA
 
-- Ne placez pas de données patients identifiables ici. Ajoutez tout fichier sensible à `.gitignore`.
+## Technologies
 
-Installer les dépendances
+- Python
+- Flask
+- Flask-SQLAlchemy
+- Flask-Login
+- MySQL / SQLite
+- HTML / CSS
+- Pandas
+- Scikit-learn
+- Ollama / Llama 3.2
 
-Sous Windows (PowerShell) :
+## Installation
 
-```powershell
+```bash
+git clone https://github.com/elazgueye/MediRendezVous-App.git
+cd MediRendezVous-App
+
 python -m venv venv
-venv\Scripts\Activate.ps1
+venv\Scripts\activate
+
 pip install -r requirements.txt
-```
-
-Exécuter l'application
-
-```bash
-python run.py
-# puis ouvrez http://127.0.0.1:5000
-```
-
-Réentraîner le modèle (local)
-
-- Script prévu : `retrain.py` (à la racine)
-- Exemple :
-
-```bash
-# activez votre venv (voir ci-dessus)
-python retrain.py
-```
-
-Le script utilise `data/diagnostics.csv` et sauvegarde les artefacts dans `app/models_ia/` :
-- `model.joblib`, `vectorizer.joblib`, `label_encoder.joblib`, `metrics.json`.
-
-Afficher la métrique sur la page d'accueil
-
-- Si `app/models_ia/metrics.json` est présent, la précision (accuracy) sera affichée sur la page d'accueil.
-
-Scripts utiles
-
-- `app/utils/import_csv.py` : valider un CSV local.
-- `app/utils/train_model.py` : code d'entraînement (TF-IDF + LogisticRegression).
-- `app/services/diagnostic.py` : utilise le modèle enregistré s'il existe, sinon retombe sur la logique basée sur règles.
-
-Prochaines améliorations possibles
-
-- Nettoyage linguistique (lemmatisation/français), suppression des stopwords.
-- Entraînement d'un modèle plus puissant (ex: fine-tuning transformers si vous disposez d'un dataset suffisamment grand).
-- Interface d'administration pour lancer l'entraînement depuis l'UI et visualiser la matrice de confusion.
-
-Contact
-
-Si vous voulez, je peux :
-- ajouter la lemmatisation/français et améliorer le prétraitement (recommandé pour de meilleurs résultats),
-- créer une page admin pour réentraîner et afficher les métriques.
-
