@@ -9,6 +9,7 @@
       <p class="mt-4 text-slate-600">Consultez et gérez les comptes patients enregistrés sur la plateforme.</p>
     </div>
   </div>
+  
   <div class="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-soft">
     <table class="min-w-full divide-y divide-slate-200">
       <thead class="bg-slate-50">
@@ -25,7 +26,11 @@
           <td class="px-6 py-4 text-sm text-slate-700">{{ patient.prenom }} {{ patient.nom }}</td>
           <td class="px-6 py-4 text-sm text-slate-700">{{ patient.email }}</td>
           <td class="px-6 py-4 text-sm text-slate-700">{{ patient.telephone or '—' }}</td>
-          <td class="px-6 py-4 text-sm text-slate-700">{{ 'Actif' if patient.user and patient.user.actif else 'Inactif' }}</td>
+          <td class="px-6 py-4 text-sm text-slate-700">
+            <span class="rounded-full px-3 py-1 text-xs font-semibold {{ 'bg-emerald-100 text-emerald-700' if patient.user and patient.user.actif else 'bg-rose-100 text-rose-700' }}">
+              {{ 'Actif' if patient.user and patient.user.actif else 'Inactif' }}
+            </span>
+          </td>
         </tr>
         {% endfor %}
       </tbody>

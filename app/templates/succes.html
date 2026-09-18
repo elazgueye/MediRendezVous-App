@@ -35,9 +35,10 @@
       </div>
     </div>
     <div class="mt-8 flex flex-col gap-4 sm:flex-row sm:justify-end">
-      <a href="/rendezvous" class="inline-flex rounded-full bg-violet-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-violet-700">Voir mes RDV</a>
-      <a href="/medecins" class="inline-flex rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100">Réserver un autre RDV</a>
+      <a href="{{ url_for('voir_rendezvous') }}" class="inline-flex rounded-full bg-violet-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-violet-700">Voir mes RDV</a>
+      <a href="{{ url_for('medecins') }}" class="inline-flex rounded-full border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100">Réserver un autre RDV</a>
     </div>
+    
     <script>
       document.addEventListener('DOMContentLoaded', function () {
         const medecin = '{{ medecin }}';

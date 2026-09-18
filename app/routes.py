@@ -1,4 +1,9 @@
+import os
+import json
+
+from app.models import Statistique, DiagnosticIA
 from datetime import date
+from datetime import datetime
 from functools import wraps
 from flask import render_template, request, redirect, url_for, flash
 from flask_login import login_user, logout_user, current_user
@@ -142,7 +147,10 @@ def register():
 
 @app.route('/register/medecin', methods=['GET', 'POST'])
 def register_medecin():
+    # Récupération de la liste des spécialités pour le menu déroulant
+    specialites = Specialite.query.order_by(Specialite.nom).all()
     error = None
+    
     if request.method == 'POST':
         prenom = request.form.get('prenom', '').strip()
         nom = request.form.get('nom', '').strip()
@@ -150,6 +158,7 @@ def register_medecin():
         telephone = request.form.get('telephone')
         specialite_name = request.form.get('specialite', '').strip()
         numero_ordre = request.form.get('numero_ordre', '').strip()
+        prix = request.form.get('prix', '').strip()
         password = request.form.get('password', '').strip()
         confirm_password = request.form.get('confirm_password', '').strip()
 
@@ -164,11 +173,14 @@ def register_medecin():
             user.set_password(password)
             db.session.add(user)
             db.session.flush()
+            
+            # Recherche ou création de la spécialité
             specialite = Specialite.query.filter_by(nom=specialite_name).first()
             if not specialite:
                 specialite = Specialite(nom=specialite_name)
                 db.session.add(specialite)
                 db.session.flush()
+                
             medecin = Medecin(
                 user_id=user.id,
                 prenom=prenom,
@@ -178,15 +190,16 @@ def register_medecin():
                 specialite=specialite_name,
                 specialite_id=specialite.id,
                 numero_ordre=numero_ordre,
-                prix='Sur devis',
+                prix=prix or 'Sur devis',
             )
             db.session.add(medecin)
             db.session.commit()
             login_user(user)
             flash('Compte médecin créé avec succès.', 'success')
             return redirect(url_for('dashboard_medecin'))
-    return render_template('register_medecin.html', error=error)
-
+            
+    # On transmet 'specialites' au template pour peupler le menu <select>
+    return render_template('register_medecin.html', error=error, specialites=specialites)
 
 @app.route('/dashboard')
 @login_required()
@@ -216,6 +229,7 @@ def dashboard_patient():
         diagnostics_count=diagnostics_count,
         next_appointments=next_appointments,
         recent_appointments=past_appointments,
+        get_rdv_statut_reel=get_rdv_statut_reel,
     )
 
 
@@ -234,6 +248,7 @@ def dashboard_medecin():
         today_count=len([rdv for rdv in rdvs if rdv.date == today]),
         upcoming_count=len(upcoming),
         upcoming=upcoming,
+        get_rdv_statut_reel=get_rdv_statut_reel,
     )
 
 
@@ -291,11 +306,20 @@ def medecin_agenda(id):
     medecin = Medecin.query.get_or_404(id)
     if current_user.role == 'medecin' and (not current_user.medecin or current_user.medecin.id != id):
         return redirect(url_for('home'))
+    
     rdvs = RendezVous.query.filter_by(medecin_id=id).order_by(RendezVous.date).all()
+    
+    # 1. On définit 'today' correctement
     today = date.today().isoformat()
-    today_rdv = [rdv for rdv in rdvs if rdv.date == today]
-    return render_template('medecin_agenda.html', medecin=medecin, rdvs=rdvs, today_rdv=today_rdv)
-
+    
+    # 2. On passe 'today' au template
+    return render_template(
+    'medecin_agenda.html', 
+    medecin=medecin, 
+    rdvs=rdvs, 
+    today=today,
+    get_rdv_statut_reel=get_rdv_statut_reel # Ajoute cette ligne ici !
+)
 
 @app.route('/medecin/<int:id>/availability', methods=['GET', 'POST'])
 @login_required(role=['medecin', 'admin'])
@@ -320,27 +344,22 @@ def medecin_availability(id):
 @login_required(role=['medecin', 'admin'])
 def medecin_agenda_update(medecin_id, rdv_id):
     rdv = RendezVous.query.get_or_404(rdv_id)
+    
+    # Sécurité
     if current_user.role == 'medecin' and (not current_user.medecin or current_user.medecin.id != medecin_id):
         return redirect(url_for('home'))
-    statut = request.form.get('statut', 'Confirmé')
-    rdv.statut = statut
+    
+    # Mise à jour du statut
+    rdv.statut = request.form.get('statut', 'Confirmé')
+    
+    # Enregistrement de la note dans la colonne 'note' du rendez-vous
     note = request.form.get('note', '').strip()
     if note:
-        consultation = rdv.consultation
-        if consultation is None:
-            consultation = Consultation(
-                rendezvous_id=rdv.id,
-                patient_id=rdv.patient_id,
-                medecin_id=rdv.medecin_id,
-                compte_rendu=note,
-            )
-            db.session.add(consultation)
-        else:
-            consultation.compte_rendu = note
+        rdv.note = note
+    
     db.session.commit()
-    flash('Statut du rendez-vous mis à jour.', 'success')
+    flash('Rendez-vous mis à jour avec succès.', 'success')
     return redirect(url_for('medecin_agenda', id=medecin_id))
-
 
 @app.route('/confirmer_rdv/<int:id>', methods=['POST'])
 def confirmer_rdv(id):
@@ -364,6 +383,21 @@ def confirmer_rdv(id):
         flash('Veuillez remplir tous les champs obligatoires.', 'danger')
         return redirect(url_for('medecin_detail', id=id))
 
+    # --- SÉCURITÉ : Vérification de disponibilité avant toute chose ---
+    disponibilite = None
+    if slot:
+        disponibilite = Disponibilite.query.filter_by(
+            medecin_id=id,
+            date=date_value,
+            plage_horaire=horaire,
+            est_disponible=True
+        ).first()
+        
+        if not disponibilite:
+            flash('Désolé, ce créneau vient d\'être réservé ou n\'est plus disponible.', 'danger')
+            return redirect(url_for('medecin_detail', id=id))
+
+    # --- Gestion patient ---
     if current_user.is_authenticated and current_user.role == 'patient' and current_user.patient:
         patient = current_user.patient
         nom = nom or f"{patient.prenom or ''} {patient.nom}".strip()
@@ -376,6 +410,7 @@ def confirmer_rdv(id):
             db.session.add(patient)
             db.session.flush()
 
+    # --- Création du rendez-vous ---
     medecin = Medecin.query.get_or_404(id)
     nouveau_rdv = RendezVous(
         patient_id=patient.id if patient else None,
@@ -389,15 +424,9 @@ def confirmer_rdv(id):
     )
     db.session.add(nouveau_rdv)
 
-    if slot:
-        disponibilite = Disponibilite.query.filter_by(
-            medecin_id=id,
-            date=date_value,
-            plage_horaire=horaire,
-            est_disponible=True,
-        ).first()
-        if disponibilite:
-            disponibilite.est_disponible = False
+    # --- Verrouillage du créneau ---
+    if disponibilite:
+        disponibilite.est_disponible = False
 
     db.session.commit()
     flash('Votre rendez-vous a été enregistré. Le médecin doit le confirmer.', 'success')
@@ -413,13 +442,19 @@ def confirmer_rdv(id):
 @app.route('/rendezvous')
 @login_required()
 def voir_rendezvous():
+    # 1. On définit la date d'aujourd'hui
+    today = date.today().isoformat()
+    
+    # 2. On récupère les rendez-vous
     if current_user.role == 'patient' and current_user.patient:
         rdv_list = RendezVous.query.filter_by(patient_id=current_user.patient.id).order_by(RendezVous.date).all()
     elif current_user.role == 'medecin' and current_user.medecin:
         rdv_list = RendezVous.query.filter_by(medecin_id=current_user.medecin.id).order_by(RendezVous.date).all()
     else:
         rdv_list = RendezVous.query.order_by(RendezVous.date).all()
-    return render_template('rendezvous.html', rdv=rdv_list)
+        
+    # 3. IMPORTANT : On passe 'today' dans le return render_template
+    return render_template('rendezvous.html', rdv=rdv_list, today=today,get_rdv_statut_reel=get_rdv_statut_reel)
 
 
 @app.route('/rendezvous/<int:rdv_id>/cancel', methods=['POST'])
@@ -436,17 +471,37 @@ def cancel_rdv(rdv_id):
 
 @app.route('/triage', methods=['GET', 'POST'])
 def triage():
-    orientation = None
-    symptomes = ''
+    # --- PARTIE GET : Pour afficher la page avec le compteur à jour ---
+    if request.method == 'GET':
+        stat = Statistique.query.first()
+        total = stat.total_analyses if stat else 0
+        return render_template('triage.html', total_analyses=total)
+
+    # --- PARTIE POST : Pour traiter l'analyse quand on clique sur valider ---
     if request.method == 'POST':
         symptomes = request.form.get('symptomes', '')
         orientation = analyze_symptoms(symptomes)
+        
+        # 1. Mise à jour des statistiques globales
+        stat = Statistique.query.first()
+        if not stat:
+            stat = Statistique(total_analyses=1)
+            db.session.add(stat)
+        else:
+            stat.total_analyses += 1
+        
+        # 2. Sauvegarde du diagnostic individuel (si connecté)
         if current_user.is_authenticated and current_user.role == 'patient' and current_user.patient:
-            diag = DiagnosticIA(patient_id=current_user.patient.id, symptomes=symptomes, orientation=orientation)
+            diag = DiagnosticIA(
+                patient_id=current_user.patient.id, 
+                symptomes=symptomes, 
+                orientation=orientation
+            )
             db.session.add(diag)
-            db.session.commit()
+            
+        db.session.commit() # Commit unique pour tout valider
+        
         return render_template('triage_result.html', symptomes=symptomes, orientation=orientation)
-    return render_template('triage.html')
 
 
 @app.route('/admin/dashboard')
@@ -577,16 +632,22 @@ def admin_toggle_user(user_id):
 @login_required(role=['medecin', 'admin'])
 def medecin_profile(id):
     medecin = Medecin.query.get_or_404(id)
+    # Récupération de la liste des spécialités pour le menu déroulant
+    specialites = Specialite.query.order_by(Specialite.nom).all()
+    
     if current_user.role == 'medecin' and (not current_user.medecin or current_user.medecin.id != id):
         return redirect(url_for('home'))
+        
     if request.method == 'POST':
         medecin.prenom = request.form.get('prenom', '').strip()
         medecin.nom = request.form.get('nom', '').strip()
         medecin.email = request.form.get('email', '').strip()
         medecin.telephone = request.form.get('telephone', '').strip()
-        medecin.specialite = request.form.get('specialite', '').strip()
         medecin.numero_ordre = request.form.get('numero_ordre', '').strip()
         medecin.experience = request.form.get('experience', '').strip()
+        medecin.prix = request.form.get('prix', '').strip() or 'Sur devis'
+        
+        # Gestion de la spécialité via la liste déroulante
         specialite_name = request.form.get('specialite', '').strip()
         if specialite_name:
             specialite = Specialite.query.filter_by(nom=specialite_name).first()
@@ -594,7 +655,66 @@ def medecin_profile(id):
                 specialite = Specialite(nom=specialite_name)
                 db.session.add(specialite)
                 db.session.flush()
+            medecin.specialite = specialite.nom
             medecin.specialite_id = specialite.id
+            
         db.session.commit()
         flash('Profil médecin mis à jour.', 'success')
-    return render_template('medecin_profile.html', medecin=medecin)
+        
+    # IMPORTANT : On passe 'specialites' au template ici
+    return render_template('medecin_profile.html', medecin=medecin, specialites=specialites)
+
+
+# Annulation par le patient
+@app.route('/patient/rendezvous/<int:rdv_id>/annuler', methods=['POST'])
+@login_required(role='patient')
+def annuler_rdv_patient(rdv_id):
+    rdv = RendezVous.query.get_or_404(rdv_id)
+    # Vérifie que c'est bien le patient propriétaire du rdv
+    if rdv.patient_id == current_user.patient.id:
+        rdv.statut = 'Annulé par le patient'
+        db.session.commit()
+        flash('Rendez-vous annulé avec succès.', 'info')
+    return redirect(url_for('dashboard_patient')) # Ou ta page de profil
+
+# Annulation par le médecin
+@app.route('/medecin/rendezvous/<int:rdv_id>/annuler', methods=['POST'])
+@login_required(role=['medecin', 'admin'])
+def annuler_rdv_medecin(rdv_id):
+    rdv = RendezVous.query.get_or_404(rdv_id)
+    # Vérifie que c'est bien le médecin qui possède ce rendez-vous
+    if rdv.medecin_id == current_user.medecin.id:
+        rdv.statut = 'Annulé par le médecin'
+        db.session.commit()
+        flash('Rendez-vous annulé et patient notifié.', 'info')
+    return redirect(url_for('medecin_agenda', id=current_user.medecin.id))
+
+@app.route('/medecin/toggle_disponibilite', methods=['POST'])
+@login_required(role='medecin')
+def toggle_disponibilite():
+    medecin = current_user.medecin
+    
+    # On utilise le champ 'prix' comme indicateur d'état
+    # Si le prix est égal à 'HORS_LIGNE', on le remet à une valeur par défaut ou vide
+    if medecin.prix == 'HORS_LIGNE':
+        medecin.prix = '10000' # Remets ton prix par défaut ici
+        flash('Vous êtes maintenant disponible.', 'info')
+    else:
+        medecin.prix = 'HORS_LIGNE'
+        flash('Vous êtes maintenant hors ligne.', 'info')
+    
+    db.session.commit()
+    return redirect(url_for('dashboard_medecin'))
+
+
+def get_rdv_statut_reel(rdv):
+    # Combiner date et heure pour comparer
+    rdv_datetime_str = f"{rdv.date} {rdv.horaire[:5]}" # Format "YYYY-MM-DD HH:MM"
+    try:
+        rdv_datetime = datetime.strptime(rdv_datetime_str, "%Y-%m-%d %H:%M")
+        # Si la date/heure du rdv est passée et que le statut n'est pas déjà annulé
+        if rdv_datetime < datetime.now() and rdv.statut not in ['Annulé', 'Annulé par le patient', 'Annulé par le médecin']:
+            return "Terminé"
+    except:
+        pass
+    return rdv.statut

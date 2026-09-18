@@ -22,21 +22,36 @@
         </div>
       </div>
     </div>
+    
     <div class="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-soft">
       <p class="text-sm font-semibold uppercase tracking-[0.3em] text-violet-600">Actions rapides</p>
       <div class="mt-6 space-y-4">
-        <a href="/medecin/{{ medecin.id }}/agenda" class="block rounded-[1.75rem] border border-slate-200 bg-white px-6 py-5 text-sm font-semibold text-slate-900 transition hover:bg-violet-50">Voir l’agenda</a>
-        <a href="/medecin/{{ medecin.id }}/availability" class="block rounded-[1.75rem] border border-slate-200 bg-white px-6 py-5 text-sm font-semibold text-slate-900 transition hover:bg-violet-50">Gérer les disponibilités</a>
-        <a href="/medecin/{{ medecin.id }}/profile" class="block rounded-[1.75rem] border border-slate-200 bg-white px-6 py-5 text-sm font-semibold text-slate-900 transition hover:bg-violet-50">Mon profil</a>
+        <form method="POST" action="{{ url_for('toggle_disponibilite') }}">
+            {% if csrf_token %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endif %}
+            <button type="submit" class="block w-full rounded-[1.75rem] border border-slate-200 bg-white px-6 py-5 text-sm font-semibold text-slate-900 transition hover:bg-violet-50 text-left">
+                Statut actuel : 
+                <span class="{{ 'text-red-600' if medecin.prix == 'HORS_LIGNE' else 'text-emerald-600' }}">
+                    {{ 'Hors ligne' if medecin.prix == 'HORS_LIGNE' else 'Disponible' }}
+                </span>
+                <span class="block text-xs font-normal text-slate-400 mt-1">Cliquez pour changer</span>
+            </button>
+        </form>
+
+        <a href="{{ url_for('medecin_agenda', id=medecin.id) }}" class="block rounded-[1.75rem] border border-slate-200 bg-white px-6 py-5 text-sm font-semibold text-slate-900 transition hover:bg-violet-50">Voir l’agenda</a>
+        <a href="{{ url_for('medecin_availability', id=medecin.id) }}" class="block rounded-[1.75rem] border border-slate-200 bg-white px-6 py-5 text-sm font-semibold text-slate-900 transition hover:bg-violet-50">Gérer les disponibilités</a>
+        <a href="{{ url_for('medecin_profile', id=medecin.id) }}" class="block rounded-[1.75rem] border border-slate-200 bg-white px-6 py-5 text-sm font-semibold text-slate-900 transition hover:bg-violet-50">Mon profil</a>
       </div>
     </div>
   </div>
+  
   <div class="rounded-[2rem] border border-slate-200 bg-white p-8 shadow-soft">
     <p class="text-sm font-semibold uppercase tracking-[0.3em] text-violet-600">Prochains rendez-vous</p>
     {% if upcoming %}
     <div class="mt-6 space-y-4">
       {% for rdv in upcoming %}
-      <div class="rounded-[1.75rem] border border-slate-200 bg-slate-50 p-5">
+      {# Utilisation de la fonction pour déterminer le statut et le style #}
+      {% set statut_reel = get_rdv_statut_reel(rdv) %}
+      <div class="rounded-[1.75rem] border border-slate-200 {{ 'bg-slate-100 opacity-60' if statut_reel == 'Terminé' else 'bg-slate-50' }} p-5">
         <div class="grid gap-4 lg:grid-cols-3 lg:items-center">
           <div>
             <p class="text-sm text-slate-500">Patient</p>
@@ -48,9 +63,20 @@
           </div>
           <div class="text-right">
             <p class="text-sm text-slate-500">Statut</p>
-            <p class="mt-2 text-lg font-semibold text-slate-900">{{ rdv.statut }}</p>
+            <p class="mt-2 text-lg font-semibold {{ 'text-slate-600' if statut_reel == 'Terminé' else 'text-slate-900' }}">
+                {{ statut_reel }}
+            </p>
           </div>
         </div>
+        
+        {% if rdv.note %}
+        <div class="mt-4 border-t border-slate-200 pt-4">
+          <p class="text-xs font-semibold uppercase tracking-wider text-violet-600">Note interne de préparation</p>
+          <p class="mt-1 text-sm italic text-slate-700 bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
+            {{ rdv.note }}
+          </p>
+        </div>
+        {% endif %}
       </div>
       {% endfor %}
     </div>

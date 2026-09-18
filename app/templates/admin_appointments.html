@@ -30,7 +30,10 @@
           <td class="px-6 py-4 text-sm text-slate-700">{{ appointment.horaire }}</td>
           <td class="px-6 py-4 text-sm text-slate-700">{{ appointment.statut }}</td>
           <td class="px-6 py-4 text-sm">
-            <form method="POST" class="flex flex-wrap gap-2">
+            <form method="POST" action="{{ url_for('admin_appointments') }}" class="flex flex-wrap gap-2">
+              {% if csrf_token %}
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              {% endif %}
               <input type="hidden" name="rdv_id" value="{{ appointment.id }}">
               <select name="statut" class="rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
                 {% for status in ['En attente', 'Confirmé', 'Annulé', 'Reporté', 'Terminé'] %}
